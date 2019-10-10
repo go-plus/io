@@ -1,6 +1,7 @@
 # io
 
 this is a non-blocking multiple reader function
+
 use this like go default MultiReader
 
 ## tips:
