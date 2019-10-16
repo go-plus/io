@@ -27,4 +27,4 @@ if use this multi reader this perhaps:
   4 
   def 
 
-If you want to solve this problem, give him a bigger cache.
+If you want to solve this problem, give it a bigger cache.
