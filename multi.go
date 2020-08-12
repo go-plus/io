@@ -60,9 +60,6 @@ func (m *multiReader) Read(p []byte) (n int, err error) {
 				m.cancel()
 				m.cancel = nil
 			}
-			if m.chanReader != nil {
-				close(m.chanReader)
-			}
 			break
 		}
 		select {
