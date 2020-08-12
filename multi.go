@@ -1,11 +1,14 @@
 package io
 
 import (
+	"context"
 	"fmt"
 	"io"
 )
 
 type multiReader struct {
+	ctx        context.Context
+	cancel     context.CancelFunc
 	count      int
 	chanReader chan *chanReader
 	readers    []io.Reader
@@ -25,35 +28,46 @@ func (m *multiReader) Read(p []byte) (n int, err error) {
 				m.readers = r.readers
 			}
 		}
+		m.ctx, m.cancel = context.WithCancel(context.TODO())
 		m.chanReader = make(chan *chanReader, m.count)
 		for i := 0; i < len(m.readers); i++ {
-			go func(cb chan<- *chanReader, index int, reader io.Reader) {
+			go func(ctx context.Context, cb chan<- *chanReader, index int, reader io.Reader) {
 				for {
 					r := &chanReader{
 						index: index,
 						p:     make([]byte, len(p)),
 					}
 					r.n, r.err = reader.Read(r.p)
-					if cb == nil {
+					select {
+					case <-ctx.Done():
 						return
+					case cb <- r:
 					}
-					cb <- r
 					if r.err != nil {
 						return
 					}
 				}
-			}(m.chanReader, i, m.readers[i])
+			}(m.ctx, m.chanReader, i, m.readers[i])
 		}
 	}
 
 	for {
 		if m.count <= 0 {
+			if m.cancel != nil {
+				m.cancel()
+				m.cancel = nil
+			}
 			close(m.chanReader)
 			m.chanReader = nil
 			break
 		}
+
 		r := <-m.chanReader
 		if r.err != nil && r.err != io.EOF {
+			if m.cancel != nil {
+				m.cancel()
+				m.cancel = nil
+			}
 			close(m.chanReader)
 			m.chanReader = nil
 			return 0, fmt.Errorf("index(%d) was error:%w", r.index, r.err)
