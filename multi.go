@@ -3,6 +3,7 @@ package io
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	"go.uber.org/atomic"
 	"io"
 )
@@ -87,6 +88,15 @@ func (m *multiReader) Read(p []byte) (n int, err error) {
 	return 0, io.EOF
 }
 
+func (m *multiReader) Close() error {
+	if m.cancel != nil {
+		m.cancel()
+		m.cancel = nil
+		return nil
+	}
+	return errors.New("reader is already closed")
+}
+
 // MultiReader returns a Reader that's the logical concatenation of
 // the provided input readers. They're read sequentially. Once all
 // inputs have returned EOF, Read will return EOF.  If any of the readers
@@ -97,4 +107,12 @@ func MultiReader(readers ...io.Reader) io.Reader {
 	return &multiReader{
 		readers: r,
 	}
+}
+
+func Close(reader io.Reader) error {
+	v, b := reader.(*multiReader)
+	if !b {
+		return errors.New("not a correct multi reader type")
+	}
+	return v.Close()
 }
