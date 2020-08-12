@@ -75,7 +75,10 @@ func (m *multiReader) Read(p []byte) (n int, err error) {
 			return n, nil
 		}
 	}
-	close(m.chanReader)
+	if m.chanReader != nil {
+		close(m.chanReader)
+		m.chanReader = nil
+	}
 	return 0, io.EOF
 }
 
