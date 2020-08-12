@@ -34,6 +34,9 @@ func (m *multiReader) Read(p []byte) (n int, err error) {
 						p:     make([]byte, len(p)),
 					}
 					r.n, r.err = reader.Read(r.p)
+					if cb == nil {
+						return
+					}
 					cb <- r
 					if r.err != nil {
 						return
