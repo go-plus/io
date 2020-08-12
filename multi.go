@@ -29,7 +29,7 @@ func (m *multiReader) Read(p []byte) (n int, err error) {
 			}
 		}
 		m.ctx, m.cancel = context.WithCancel(context.TODO())
-		m.chanReader = make(chan *chanReader, m.count)
+		m.chanReader = make(chan *chanReader)
 		for i := 0; i < len(m.readers); i++ {
 			go func(ctx context.Context, cb chan<- *chanReader, index int, reader io.Reader) {
 				for {
