@@ -55,11 +55,12 @@ func (m *multiReader) Read(p []byte) (n int, err error) {
 	}
 
 	for {
-		if m.count.Load() <= 0 {
-			break
-		}
 		select {
 		case <-m.ctx.Done():
+			if m.chanReader != nil {
+				close(m.chanReader)
+				m.chanReader = nil
+			}
 			break
 		case r := <-m.chanReader:
 			if r.err != nil && r.err != io.EOF {
@@ -73,12 +74,17 @@ func (m *multiReader) Read(p []byte) (n int, err error) {
 			}
 			n := copy(p, r.p[:r.n])
 			return n, nil
+		default:
+		}
+		if m.count.Load() <= 0 {
+			if m.cancel != nil {
+				m.cancel()
+				m.cancel = nil
+			}
+			break
 		}
 	}
-	if m.chanReader != nil {
-		close(m.chanReader)
-		m.chanReader = nil
-	}
+
 	return 0, io.EOF
 }
 
