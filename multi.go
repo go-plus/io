@@ -2,8 +2,8 @@ package io
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"github.com/pkg/errors"
 	"go.uber.org/atomic"
 	"io"
 )
