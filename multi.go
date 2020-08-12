@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"go.uber.org/atomic"
 	"io"
+
+	"go.uber.org/atomic"
 )
 
 type multiReader struct {
